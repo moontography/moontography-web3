@@ -1,0 +1,22 @@
+{
+  "name": "ethereum-tasks",
+  "version": "0.0.1",
+  "description": "Common tasks to perform operations on the Ethereum blockchain",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "Lance Whatley",
+  "license": "MIT",
+  "dependencies": {
+    "columnify": "^1.5.4",
+    "ethereumjs-util": "^7.0.10",
+    "minimist": "^1.2.5",
+    "web3": "^1.3.5"
+  },
+  "devDependencies": {
+    "@types/columnify": "^1.5.0",
+    "@types/minimist": "^1.2.1",
+    "@types/node": "^14.14.8",
+    "typescript": "^4.0.5"
+  }
+}
