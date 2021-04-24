@@ -5,7 +5,7 @@ import Web3Utils from '../libs/Web3Utils'
 const argv = minimist(process.argv.slice(2), {
   string: ['a', 'addr', 'address'],
 })
-const jsonRpc = argv.r || argv.rpc
+const jsonRpc = argv.r || argv.rpc || 'http://localhost:8545'
 const addr = argv.a || argv.addr || argv.address
 ;(async function getBalance() {
   try {

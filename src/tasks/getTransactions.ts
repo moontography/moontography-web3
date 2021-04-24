@@ -7,7 +7,7 @@ const argv = minimist(process.argv.slice(2), {
   string: ['a', 'addr', 'address'],
 })
 const addr = argv.a || argv.addr || argv.address
-const jsonRpc = argv.r || argv.rpc
+const jsonRpc = argv.r || argv.rpc || 'http://localhost:8545'
 ;(async function getTransactions() {
   try {
     assert(jsonRpc, 'JSON RPC for web3 not provided')
