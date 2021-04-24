@@ -8,8 +8,7 @@ export interface IAddress {
 }
 
 export function getAddressFromInput(input: Buffer | string): IAddress {
-  let privateKey =
-    input instanceof Buffer ? input : Buffer.from(stringToHash(input), 'hex')
+  const privateKey = Buffer.from(stringToHash(input), 'hex')
 
   // TODO: figure out how to implement if private key was provided as given
   // if the string provided is not 256 bits, SHA256 hash it and
@@ -24,8 +23,11 @@ export function getAddressFromInput(input: Buffer | string): IAddress {
   }
 }
 
-export function stringToHash(string: string, hashAlgo: string = 'sha256') {
+export function stringToHash(
+  input: Buffer | string,
+  hashAlgo: string = 'sha256'
+) {
   const md5Sum = crypto.createHash(hashAlgo)
-  md5Sum.update(string)
+  md5Sum.update(input)
   return md5Sum.digest('hex')
 }
