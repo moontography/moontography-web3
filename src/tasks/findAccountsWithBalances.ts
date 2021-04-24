@@ -35,7 +35,7 @@ const batch = argv.b || argv.batch || 1e3
             if (isNaN(parseFloat(ether)) || parseFloat(ether) === 0) return
 
             const addy = {
-              seed,
+              // seed,
               address,
               privKey,
               // pubKey,
