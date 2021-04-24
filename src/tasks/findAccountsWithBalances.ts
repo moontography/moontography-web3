@@ -3,7 +3,7 @@ import columnify from 'columnify'
 import minimist from 'minimist'
 import Random from '../libs/Random'
 import Web3Utils from '../libs/Web3Utils'
-import { getAddressFromPrivateKey } from '../libs/Address'
+import { getAddressFromInput } from '../libs/Address'
 
 const argv = minimist(process.argv.slice(2))
 const initSeed = argv.s || argv.see
@@ -28,8 +28,8 @@ const batch = argv.b || argv.batch || 1e3
         attempts.map(async (_) => {
           try {
             process.stdout.write(`.`)
-            const seed = initSeed || Random.string()
-            const { address, privKey, pubKey } = getAddressFromPrivateKey(seed)
+            const seed = initSeed || (await Random.bytes())
+            const { address, privKey, pubKey } = getAddressFromInput(seed)
             const ether = await utils.getBalance(address)
             numProcessed++
             if (isNaN(parseFloat(ether)) || parseFloat(ether) === 0) return

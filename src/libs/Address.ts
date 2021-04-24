@@ -7,13 +7,15 @@ export interface IAddress {
   pubKey?: string
 }
 
-export function getAddressFromPrivateKey(hexOrUtf8String: string): IAddress {
-  let privateKey = Buffer.from(hexOrUtf8String, 'hex')
+export function getAddressFromInput(input: Buffer | string): IAddress {
+  let privateKey =
+    input instanceof Buffer ? input : Buffer.from(stringToHash(input), 'hex')
 
+  // TODO: figure out how to implement if private key was provided as given
   // if the string provided is not 256 bits, SHA256 hash it and
   // return back as hex which will always be 256 bits.
-  // if (Buffer.byteLength(hexOrUtf8String, 'hex') !== 256 / 8) {
-  privateKey = Buffer.from(stringToHash(hexOrUtf8String), 'hex')
+  // if (Buffer.byteLength(input, 'hex') !== 256 / 8) {
+  //   privateKey = Buffer.from(stringToHash(input), 'hex')
   // }
   return {
     address: `0x${privateToAddress(privateKey).toString('hex')}`,
