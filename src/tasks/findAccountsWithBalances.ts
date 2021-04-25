@@ -6,7 +6,7 @@ import Web3Utils from '../libs/Web3Utils'
 import { getAddressFromInput } from '../libs/Address'
 
 const argv = minimist(process.argv.slice(2))
-const initSeed = argv.s || argv.see
+const initSeed = argv.s || argv.seed
 const jsonRpc = argv.r || argv.rpc || 'http://localhost:8545'
 const tries = argv.t || argv.tries || 1e4
 const batch = argv.b || argv.batch || 1e3
@@ -25,9 +25,10 @@ const batch = argv.b || argv.batch || 1e3
       process.stdout.write(`*`)
       const attempts = new Array(Math.min(iBatch, iTries)).fill(0)
       await Promise.all(
-        attempts.map(async (_) => {
+        attempts.map(async (_, i) => {
           try {
             process.stdout.write(`.`)
+            if (i % 200 === 0) process.stdout.write(`\n`)
             numProcessed++
             const seed = initSeed || (await Random.bytes())
             const { address, privKey, pubKey } = getAddressFromInput(seed)
