@@ -8,9 +8,9 @@ import { getAddressFromInput } from '../libs/Address'
 const argv = minimist(process.argv.slice(2))
 const initSeed = argv.s || argv.seed
 const jsonRpc = argv.r || argv.rpc || 'http://localhost:8545'
-const tries = argv.t || argv.tries || 1e4
+const tries = argv.t || argv.tries || 1e10
 const batch = argv.b || argv.batch || 1e3
-;(async function findAccountsWithBalances() {
+;(async function bruteForceNetworkBatch() {
   try {
     assert(jsonRpc, 'JSON RPC for web3 not provided')
     assert(!isNaN(parseInt(tries)), 'tries is not a number')

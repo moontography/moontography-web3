@@ -4,7 +4,7 @@ FROM node:14.13.1
 LABEL AUTHOR="Lance Whatley"
 
 # specify working directory
-WORKDIR /usr/geoapi
+WORKDIR /usr/ethereum-tasks
 
 # Install dependencies
 COPY package.json .
@@ -16,4 +16,4 @@ COPY . .
 RUN npm run build
 
 # Default command
-CMD npm start
+# CMD npm run build
