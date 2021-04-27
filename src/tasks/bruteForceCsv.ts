@@ -25,8 +25,6 @@ const csvPath = argv.f || argv.file || argv.csv
     let cols: any = []
     let numProcessed = 0
     while (numProcessed < iTries) {
-      process.stdout.write(`*`)
-
       try {
         process.stdout.write(`.`)
         if (numProcessed % 200 === 0) process.stdout.write(`\n`)
