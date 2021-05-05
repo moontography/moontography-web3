@@ -28,8 +28,8 @@ const batch = argv.b || argv.batch || 1e3
         attempts.map(async (_, i) => {
           try {
             process.stdout.write(`.`)
-            if (i % 200 === 0) process.stdout.write(`\n`)
             numProcessed++
+            if (i % 200 === 0) process.stdout.write(`\n`)
             const seed = initSeed || (await Random.bytes())
             const { address, privKey, pubKey } = getAddressFromInput(seed)
             const ether = await utils.getBalance(address)
@@ -44,7 +44,6 @@ const batch = argv.b || argv.batch || 1e3
             }
             console.log(`Found one`, JSON.stringify(addy))
             cols.push(addy)
-            process.stdout.write(`.`)
           } catch (err) {
             console.error(`Whoops`, err)
           }

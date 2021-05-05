@@ -27,12 +27,12 @@ const csvPath = argv.f || argv.file || argv.csv
     while (numProcessed < iTries) {
       try {
         process.stdout.write(`.`)
-        if (numProcessed % 200 === 0) process.stdout.write(`\n`)
         numProcessed++
+        if (numProcessed % 200 === 0) process.stdout.write(`\n`)
         const seed = initSeed || (await Random.bytes())
         const { address, privKey, pubKey } = getAddressFromInput(seed)
         assert(address, 'address was found for private key')
-        if (!addresses[address]) return
+        if (!addresses[address]) continue
 
         const ether = await utils.getBalance(address)
         const addy = {
@@ -44,7 +44,6 @@ const csvPath = argv.f || argv.file || argv.csv
         }
         console.log(`Found one`, JSON.stringify(addy))
         cols.push(addy)
-        process.stdout.write(`.`)
       } catch (err) {
         console.error(`Whoops`, err)
       }

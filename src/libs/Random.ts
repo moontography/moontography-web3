@@ -5,7 +5,7 @@ export default {
     length: number = Math.floor(Math.random() * 1e5) + 256
   ): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      randomBytes(Math.ceil(length / 2), (err, buffer) => {
+      randomBytes(Math.ceil(length), (err, buffer) => {
         if (err) return reject(err)
         resolve(buffer)
       })
