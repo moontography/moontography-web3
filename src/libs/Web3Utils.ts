@@ -2,6 +2,7 @@ import assert from 'assert'
 import dayjs from 'dayjs'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
+import { BlockTransactionObject } from 'web3-eth'
 import { Unit } from 'web3-utils'
 import { IAddress } from './Address'
 import { exponentialBackoff } from './Helpers'
@@ -30,6 +31,7 @@ export default function Web3Utils(httpProvUrl: string, opts?: IAddress) {
       endBlockNumber?: number,
       progressCallback?: (block: number) => {}
     ): Promise<Transaction[]> {
+      const caseInsensitiveAddy = addr.toLowerCase()
       if (typeof endBlockNumber !== 'number') {
         endBlockNumber = await this.web3.eth.getBlockNumber()
       }
@@ -47,16 +49,19 @@ export default function Web3Utils(httpProvUrl: string, opts?: IAddress) {
           .fill(0)
           .map(async (_, index) => {
             const i = (startBlockNumber || 0) + index
-            const block = await exponentialBackoff(
+            const block: BlockTransactionObject = await exponentialBackoff(
               async () => await this.web3.eth.getBlock(i, true)
             )
             if (typeof progressCallback === 'function') progressCallback(i)
             if (block != null && block.transactions != null) {
-              block.transactions.forEach((e: any) => {
-                if (addr == '*' || addr == e.from || addr == e.to) {
-                  txns.push(e)
-                }
-              })
+              txns = txns.concat(
+                block.transactions.filter(
+                  (e) =>
+                    caseInsensitiveAddy == '*' ||
+                    caseInsensitiveAddy == (e.from || '').toLowerCase() ||
+                    caseInsensitiveAddy == (e.to || '').toLowerCase()
+                )
+              )
             }
           })
       )
