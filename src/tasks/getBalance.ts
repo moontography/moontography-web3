@@ -11,7 +11,7 @@ const addr = argv.a || argv.addr || argv.address
   try {
     assert(jsonRpc, 'JSON RPC for web3 not provided')
     assert(addr, 'address not provided')
-    const utils = Web3Utils(jsonRpc)
+    const utils = Web3Utils(null, jsonRpc)
     const ether = await utils.getBalance(addr)
     console.log(`Account balance of ${addr} is ${ether} ETH`)
   } catch (err) {

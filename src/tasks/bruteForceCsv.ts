@@ -1,6 +1,5 @@
 import assert from 'assert'
 import fs from 'fs'
-import columnify from 'columnify'
 import minimist from 'minimist'
 import Random from '../libs/Random'
 import Web3Utils from '../libs/Web3Utils'
@@ -16,7 +15,7 @@ const csvPath = argv.f || argv.file || argv.csv
     assert(jsonRpc, 'JSON RPC for web3 not provided')
     assert(!isNaN(parseInt(tries)), 'tries is not a number')
     const iTries = parseInt(tries)
-    const utils = Web3Utils(jsonRpc)
+    const utils = Web3Utils(null, jsonRpc)
     const csvData = await fs.promises.readFile(csvPath, 'utf-8')
     const addresses: any = csvData
       .split('\n')
@@ -49,7 +48,7 @@ const csvPath = argv.f || argv.file || argv.csv
       }
     }
 
-    console.log(`\n${columnify(cols)}`)
+    console.log(`\n${JSON.stringify(cols)}`)
   } catch (err) {
     console.error(`Error finding accounts`, err)
   } finally {

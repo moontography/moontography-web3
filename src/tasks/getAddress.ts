@@ -1,5 +1,4 @@
 import assert from 'assert'
-import columnify from 'columnify'
 import minimist from 'minimist'
 import { getAddressFromInput } from '../libs/Address'
 
@@ -10,7 +9,7 @@ const key = argv.k || argv.key
     assert(key, 'private key not provided')
     const { address, privKey, pubKey } = getAddressFromInput(key)
     console.log(
-      columnify([
+      JSON.stringify([
         {
           address,
           'private key': privKey,

@@ -1,5 +1,4 @@
 import assert from 'assert'
-import columnify from 'columnify'
 import minimist from 'minimist'
 import Random from '../libs/Random'
 import Web3Utils from '../libs/Web3Utils'
@@ -17,7 +16,7 @@ const batch = argv.b || argv.batch || 1e3
     assert(!isNaN(parseInt(batch)), 'batch is not a number')
     const iBatch = parseInt(batch)
     const iTries = parseInt(tries)
-    const utils = Web3Utils(jsonRpc)
+    const utils = Web3Utils(null, jsonRpc)
 
     let cols: any = []
     let numProcessed = 0
@@ -51,7 +50,7 @@ const batch = argv.b || argv.batch || 1e3
       )
     }
 
-    console.log(`\n${columnify(cols)}`)
+    console.log(`\n${JSON.stringify(cols)}`)
   } catch (err) {
     console.error(`Error finding accounts`, err)
   } finally {

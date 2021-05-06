@@ -1,24 +1,27 @@
 import assert from 'assert'
 import dayjs from 'dayjs'
 import Web3 from 'web3'
-import { Transaction } from 'web3-core'
+import { provider, Transaction } from 'web3-core'
 import { BlockTransactionObject } from 'web3-eth'
 import { Unit } from 'web3-utils'
 import { IAddress } from './Address'
 import { exponentialBackoff } from './Helpers'
 
-export default function Web3Utils(httpProvUrl: string, opts?: IAddress) {
+export default function Web3Utils(
+  provider?: provider,
+  httpProvUrl?: string,
+  addressOpts?: IAddress
+) {
   return {
-    web3: new Web3(new Web3.providers.HttpProvider(httpProvUrl)),
+    web3: new Web3(
+      provider || new Web3.providers.HttpProvider(httpProvUrl || '')
+    ),
 
     // https://github.com/ThatOtherZach/Web3-by-Example/blob/master/scripts/getBalance.js
-    async getBalance(
-      addr: undefined | string,
-      units: Unit = 'ether'
-    ): Promise<string> {
+    async getBalance(addr?: string, units: Unit = 'ether'): Promise<string> {
       if (!addr) {
-        assert(opts?.address, 'global address not provided')
-        addr = opts.address
+        assert(addressOpts?.address, 'global address not provided')
+        addr = addressOpts.address
       }
       assert(addr, 'address must be provided')
       const result = await exponentialBackoff(

@@ -12,7 +12,7 @@ const end = argv.e || argv.end
     assert(jsonRpc, 'JSON RPC for web3 not provided')
     assert(start && end, 'start and end dates are not provided')
 
-    const utils = Web3Utils(jsonRpc)
+    const utils = Web3Utils(null, jsonRpc)
     const { first, last } = await utils.getBlocksOverDateRange(start, end, () =>
       process.stdout.write('.')
     )

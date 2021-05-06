@@ -1,5 +1,4 @@
 import assert from 'assert'
-import columnify from 'columnify'
 import minimist from 'minimist'
 import Web3Utils from '../libs/Web3Utils'
 
@@ -22,7 +21,7 @@ const endBlock = argv.e || argv.end
       typeof endBlock === 'undefined' || !isNaN(parseInt(endBlock)),
       'end block provided is not a number'
     )
-    const utils = Web3Utils(jsonRpc)
+    const utils = Web3Utils(null, jsonRpc)
     const txns = await utils.getTransactions(
       addr,
       startBlock && parseInt(startBlock),

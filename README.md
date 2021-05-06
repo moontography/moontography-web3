@@ -1,3 +1,3 @@
-# ethereum-tasks
+# moontography-web3
 
-Common tasks to perform operations on the Ethereum blockchain.
+Common web3 utilities & operations on the Ethereum blockchain
