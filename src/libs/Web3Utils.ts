@@ -21,7 +21,9 @@ export default function Web3Utils(httpProvUrl: string, opts?: IAddress) {
         addr = opts.address
       }
       assert(addr, 'address must be provided')
-      const result = await this.web3.eth.getBalance(addr)
+      const result = await exponentialBackoff(
+        async () => await this.web3.eth.getBalance(addr as string)
+      )
       return this.web3.utils.fromWei(result, units)
     },
 
@@ -33,7 +35,9 @@ export default function Web3Utils(httpProvUrl: string, opts?: IAddress) {
     ): Promise<Transaction[]> {
       const caseInsensitiveAddy = addr.toLowerCase()
       if (typeof endBlockNumber !== 'number') {
-        endBlockNumber = await this.web3.eth.getBlockNumber()
+        endBlockNumber = (await exponentialBackoff(
+          async () => await this.web3.eth.getBlockNumber()
+        )) as number
       }
       if (typeof startBlockNumber !== 'number') {
         assert(
