@@ -1,6 +1,6 @@
 {
   "name": "moontography-web3",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Common web3 utilities & operations on the Ethereum blockchain",
   "main": "./dist/libs/index.js",
   "scripts": {
