@@ -20,7 +20,10 @@ export default function Web3Utils(
     // https://github.com/ThatOtherZach/Web3-by-Example/blob/master/scripts/getBalance.js
     async getBalance(addr?: string, units: Unit = 'ether'): Promise<string> {
       if (!addr) {
-        assert(addressOpts?.address, 'global address not provided')
+        assert(
+          addressOpts && addressOpts.address,
+          'global address not provided'
+        )
         addr = addressOpts.address
       }
       assert(addr, 'address must be provided')
