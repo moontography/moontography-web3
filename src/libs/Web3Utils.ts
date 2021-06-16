@@ -1,11 +1,14 @@
 import assert from 'assert'
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
 import Web3 from 'web3'
 import { provider, Transaction } from 'web3-core'
 import { BlockTransactionObject } from 'web3-eth'
 import { Unit } from 'web3-utils'
 import { IAddress } from './Address'
 import { exponentialBackoff } from './Helpers'
+
+dayjs.extend(utc)
 
 export default function Web3Utils(
   provider?: provider,
@@ -113,11 +116,13 @@ export default function Web3Utils(
           : await this.web3.eth.getBlockNumber()
       currentBlock = typeof currentBlock === 'number' ? currentBlock : lastBlock
 
-      const dayjsDate = dayjs(date).startOf('day')
+      const dayjsDate = dayjs.utc(date).startOf('day')
       const currentBlockInfo = await exponentialBackoff(
         async () => await this.web3.eth.getBlock(currentBlock as number)
       )
-      const currentBlockDate = dayjs(Number(currentBlockInfo.timestamp) * 1000)
+      const currentBlockDate = dayjs.utc(
+        Number(currentBlockInfo.timestamp) * 1000
+      )
       if (currentBlockDate.startOf('day').isBefore(dayjsDate)) {
         if (currentBlock > lastBlock) return lastBlock
 
@@ -159,7 +164,7 @@ export default function Web3Utils(
             const blockBeforeInfo = await exponentialBackoff(
               async () => await this.web3.eth.getBlock(blockBefore as number)
             )
-            const blockBeforeDate = dayjs(
+            const blockBeforeDate = dayjs.utc(
               Number(blockBeforeInfo.timestamp) * 1000
             )
             if (blockBeforeDate.startOf('day').isSame(dayjsDate)) {
@@ -179,7 +184,7 @@ export default function Web3Utils(
             const blockAfterInfo = await exponentialBackoff(
               async () => await this.web3.eth.getBlock(blockAfter as number)
             )
-            const blockAfterDate = dayjs(
+            const blockAfterDate = dayjs.utc(
               Number(blockAfterInfo.timestamp) * 1000
             )
             if (
