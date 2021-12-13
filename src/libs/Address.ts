@@ -27,7 +27,7 @@ export function stringToHash(
   input: Buffer | string,
   hashAlgo: string = 'sha256'
 ) {
-  const md5Sum = crypto.createHash(hashAlgo)
-  md5Sum.update(input)
-  return md5Sum.digest('hex')
+  const hashSum = crypto.createHash(hashAlgo)
+  hashSum.update(input)
+  return hashSum.digest('hex')
 }
