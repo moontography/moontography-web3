@@ -1,4 +1,7 @@
 import assert from 'assert'
+import fs from 'fs'
+import path from 'path'
+import BigNumber from 'bignumber.js'
 import minimist from 'minimist'
 import Random from '../libs/Random'
 import Web3Utils from '../libs/Web3Utils'
@@ -10,6 +13,9 @@ const jsonRpc = argv.r || argv.rpc || 'http://localhost:8545'
 const tries = argv.t || argv.tries || 1e10
 const batch = argv.b || argv.batch || 1e3
 ;(async function bruteForceNetworkBatch() {
+  const fileStream = fs.createWriteStream(
+    path.join(`./addresses_${Date.now()}.json`)
+  )
   try {
     assert(jsonRpc, 'JSON RPC for web3 not provided')
     assert(!isNaN(parseInt(tries)), 'tries is not a number')
@@ -26,13 +32,14 @@ const batch = argv.b || argv.batch || 1e3
       await Promise.all(
         attempts.map(async (_, i) => {
           try {
-            process.stdout.write(`.`)
+            if (i % (batch / 5) == 0) {
+              process.stdout.write(`.`)
+            }
             numProcessed++
-            if (i % 200 === 0) process.stdout.write(`\n`)
+            // if (i % 200 === 0) process.stdout.write(`\n`)
             const seed = initSeed || (await Random.bytes())
             const { address, privKey, pubKey } = getAddressFromInput(seed)
-            const ether = await utils.getBalance(address)
-            if (isNaN(parseFloat(ether)) || parseFloat(ether) === 0) return
+            const ether = new BigNumber(await utils.getBalance(address))
 
             const addy = {
               // seed,
@@ -41,8 +48,13 @@ const batch = argv.b || argv.batch || 1e3
               // pubKey,
               ether,
             }
-            console.log(`Found one`, JSON.stringify(addy))
-            cols.push(addy)
+            fileStream.write(`${JSON.stringify(addy)}\n`, 'utf-8')
+            if (ether.lte(0)) {
+              // console.log(`No bueno :(`, JSON.stringify(addy))
+            } else {
+              console.log(`Found one`, JSON.stringify(addy))
+              cols.push(addy)
+            }
           } catch (err) {
             console.error(`Whoops`, err)
           }
@@ -54,6 +66,7 @@ const batch = argv.b || argv.batch || 1e3
   } catch (err) {
     console.error(`Error finding accounts`, err)
   } finally {
+    fileStream.end()
     process.exit()
   }
 })()

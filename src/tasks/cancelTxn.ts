@@ -2,6 +2,7 @@
 // bash-cli$ PROVIDER_URL=INFURA_URL PRIVATE_KEY=THE_KEY NONCE=THE_NONCE_OF_TXN_TO_CANCEL node dist/tasks/cancelTxn
 
 import assert from 'assert'
+import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 
 async function cancelTxn() {
@@ -22,8 +23,9 @@ async function cancelTxn() {
     // if you see a "Error: Returned error: exceeds block gas limit" error, hardcode a
     // gas value as commented below which should force it through
     // https://ethereum.stackexchange.com/questions/1832/cant-send-transaction-exceeds-block-gas-limit-or-intrinsic-gas-too-low
-    gas: await web3.eth.getGasPrice(),
-    // gas: 100000,
+    // gas: await web3.eth.getGasPrice(),
+    gas: 100000,
+    gasPrice: new BigNumber(await web3.eth.getGasPrice()).times('3').toFixed(0), // 3x current gas price
   }
   const signedTx = await account.signTransaction(txData)
   assert(signedTx.rawTransaction, 'raw transaction not found')
