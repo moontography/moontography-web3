@@ -1,3 +1,5 @@
+import { BigNumber } from 'bignumber.js'
+
 export async function exponentialBackoff(
   promiseFunction: PromiseFunction,
   failureFunction: any = () => {},
@@ -12,7 +14,7 @@ export async function exponentialBackoff(
   try {
     const result = await promiseFunction()
     return result
-  } catch (err) {
+  } catch (err: any) {
     failureFunction(err, backoffAttempt)
     await sleep(backoffSecondsToWait * 1000)
     return await exponentialBackoff(
@@ -23,6 +25,14 @@ export async function exponentialBackoff(
       backoffAttempt + 1
     )
   }
+}
+
+export function processMulticallValue(val: any) {
+  if (!val) return null
+  if (val.toString() === '[object Object]') {
+    return new BigNumber(val.hex.toLowerCase()).toFixed()
+  }
+  return val
 }
 
 export /* async */ function sleep(milliseconds: number): Promise<void> {
