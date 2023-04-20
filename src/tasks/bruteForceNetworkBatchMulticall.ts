@@ -100,6 +100,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider(jsonRpc))
               cols.push(addy)
             }
           })
+          numProcessed += iBatch
         }
         // (err: Error) => console.error(`Problem getting balances`, err)
       )

@@ -67,8 +67,12 @@ const rewardsContracts: any = {
 
   const info: any = {}
   for (const address of Array.from(addressSet)) {
-    info[address] = await rewardsContract.methods.getBaseShares(address).call()
-    // TODO: function getBoostNfts
+    const [shares, nfts] = await Promise.all([
+      rewardsContract.methods.getBaseShares(address).call(),
+      rewardsContract.methods.getBoostNfts(address).call(),
+    ])
+    info[address] = shares
+    // TODO: populate NFTs as well
     console.log(
       `rewards progress: ${(
         (Object.keys(info).length / addressSet.size) *

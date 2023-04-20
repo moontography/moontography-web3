@@ -2,6 +2,7 @@ import assert from 'assert'
 import { createArrayCsvWriter } from 'csv-writer'
 import dotenv from 'dotenv'
 import { ethers } from 'ethers'
+import { getAddressesWithTokenTransfers } from '../libs/Snapshot'
 
 // Initialize environment variables
 dotenv.config()
@@ -51,44 +52,20 @@ dotenv.config()
       process.exit(1)
   }
 
-  const tokenContract = new ethers.Contract(
-    process.env.TOKEN_ADDRESS,
-    tokenABI,
-    provider
-  )
-  const transferEventsFilter = tokenContract.filters.Transfer()
-
-  // Most APIs limit event response data to 2,000 blocks. Hence we split the block range into manageable chunks. Set
-  // accordingly to the provider's limits.
+  // Most APIs limit event response data to 2,000 blocks.
+  // Hence we split the block range into manageable chunks.
+  // Set accordingly to the provider's limits.
   const BLOCK_LIMIT_PER_CALL = 2000
   const startBlockNumber = Number.parseInt(process.env.INITIAL_BLOCK_NUMBER)
   const endBlockNumber = Number.parseInt(process.env.FINAL_BLOCK_NUMBER)
-  const blockCount = endBlockNumber - startBlockNumber
-  const chunkCount = Math.ceil(blockCount / BLOCK_LIMIT_PER_CALL)
-
-  // The ranges of block numbers to retrieve data for are set up in such a manner that they don't overlap.
-  const ranges = [...Array(chunkCount).keys()].map((i) => [
-    startBlockNumber + i * BLOCK_LIMIT_PER_CALL,
-    startBlockNumber + (i + 1) * BLOCK_LIMIT_PER_CALL - 1,
-  ])
-
-  // Update last range to stop at indicated block number.
-  ranges[ranges.length - 1][1] = endBlockNumber
-
-  console.log(`Processing addresses: ${blockCount} blocks`)
-  let index: Set<string> = new Set()
-  for (const range of ranges) {
-    const tokenTransfers = await tokenContract.queryFilter(
-      transferEventsFilter,
-      range[0],
-      range[1]
-    )
-    const tokenReceivers = new Set(tokenTransfers.map((t: any) => t.args.to))
-    index = new Set([...tokenReceivers, ...index])
-    console.log(
-      `${(100 - ((endBlockNumber - range[1]) / blockCount) * 100).toFixed(2)}%`
-    )
-  }
+  const [tokenContract, index] = await getAddressesWithTokenTransfers(
+    provider,
+    process.env.TOKEN_ADDRESS,
+    startBlockNumber,
+    endBlockNumber,
+    BLOCK_LIMIT_PER_CALL,
+    (info: string) => console.log(info)
+  )
 
   console.log(`Processing balances: ${index.size} total`)
   const balances: any = {}
