@@ -65,13 +65,13 @@ const rewardsContracts: any = {
 
   const rewardsContract = OKLGRewardDistributor(new Web3(providerURL), rewards)
 
-  const info: any = {}
+  const info: any[] = []
   for (const address of Array.from(addressSet)) {
     const [shares, nfts] = await Promise.all([
       rewardsContract.methods.getBaseShares(address).call(),
       rewardsContract.methods.getBoostNfts(address).call(),
     ])
-    info[address] = shares
+    info.push([address, shares, nfts.length, nfts.join(',')])
     // TODO: populate NFTs as well
     console.log(
       `rewards progress: ${(
@@ -83,9 +83,9 @@ const rewardsContracts: any = {
 
   // Output CSV
   const csvWriter = createArrayCsvWriter({
-    header: ['Address', 'Balance'],
+    header: ['Address', 'Shares', 'Num NFTs', 'NFTs'],
     path: 'rewardsBalances.csv',
   })
-  await csvWriter.writeRecords(Object.entries(info))
+  await csvWriter.writeRecords(info)
   console.log('Done. View rewardsBalances.csv.')
 })()

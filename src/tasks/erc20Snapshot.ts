@@ -27,6 +27,7 @@ dotenv.config()
         'https://bsc-dataseed.binance.org/'
       )
       break
+    case 'eth':
     case 'homestead':
     case 'mainnet':
       // NOTE: Infura node needs archive data for this to work correctly

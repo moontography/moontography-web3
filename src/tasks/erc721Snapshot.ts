@@ -25,16 +25,22 @@ async function erc721Snapshot() {
   for (let _i = 0; _i < totalSupply; _i++) {
     process.stdout.write(`.`)
     const tokenId = _i + 1
-    owners[tokenId] = await nft.methods.ownerOf(tokenId).call()
+    try {
+      owners[tokenId] = await nft.methods.ownerOf(tokenId).call()
+    } catch (err) {
+      // TODO: any error handling?
+    }
   }
   process.stdout.write(`\n`)
+
+  const fileName = `nftOwnership_${Date.now()}.csv`
 
   // Output CSV
   const csvWriter = createArrayCsvWriter({
     header: ['TokenID', 'Owner'],
-    path: 'nftOwnership.csv',
+    path: fileName,
   })
   await csvWriter.writeRecords(Object.entries(owners))
 
-  console.log(`Successfully got snapshot. nftOwnership.csv`)
+  console.log(`Successfully got snapshot. ${fileName}`)
 }
