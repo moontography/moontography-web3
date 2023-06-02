@@ -2,7 +2,7 @@ import assert from 'assert'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import Web3 from 'web3'
-import { provider, Transaction } from 'web3-core'
+import { provider, Account, Transaction } from 'web3-core'
 import { BlockTransactionObject } from 'web3-eth'
 import { Unit } from 'web3-utils'
 import { IAddress } from './Address'
@@ -203,6 +203,20 @@ export default function Web3Utils(
       }
     },
   }
+}
+
+export function addAllAccountsToWeb3(web3: Web3, pKeys: string[]): Account[] {
+  let accounts: Account[] = []
+  for (let _i = 0; _i < pKeys.length; _i++) {
+    accounts.push(addAccountToWeb3(web3, pKeys[_i]))
+  }
+  return accounts
+}
+
+export function addAccountToWeb3(web3: Web3, pKey: string): Account {
+  const account = web3.eth.accounts.privateKeyToAccount(`0x${pKey}`)
+  web3.eth.accounts.wallet.add(account)
+  return account
 }
 
 export interface IBlockRange {

@@ -5,7 +5,7 @@ export default function UniswapV2Router02(web3: Web3, contractAddy: string) {
   return new web3.eth.Contract(abi, contractAddy)
 }
 
-const abi: AbiItem[] = [
+export const abi: AbiItem[] = [
   {
     inputs: [],
     name: 'WETH',
