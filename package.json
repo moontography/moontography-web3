@@ -13,6 +13,7 @@
   "dependencies": {
     "@ensdomains/ensjs": "^3.0.0-alpha.6",
     "assert": "^2.0.0",
+    "csv-reader": "^1.0.12",
     "csv-writer": "^1.6.0",
     "dayjs": "^1.10.4",
     "dotenv": "^16.0.1",

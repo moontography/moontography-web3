@@ -65,6 +65,7 @@ dotenv.config()
     startBlockNumber,
     endBlockNumber,
     BLOCK_LIMIT_PER_CALL,
+    undefined,
     (info: string) => console.log(info)
   )
 
@@ -80,10 +81,11 @@ dotenv.config()
   }
 
   // Output CSV
+  const fileName = `balances_${Date.now()}.csv`
   const csvWriter = createArrayCsvWriter({
     header: ['Address', 'Balance'],
-    path: 'balances.csv',
+    path: fileName,
   })
   await csvWriter.writeRecords(Object.entries(balances))
-  console.log('Done. View balance.csv.')
+  console.log(`Done. View ${fileName}.`)
 })()

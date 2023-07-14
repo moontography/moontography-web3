@@ -17,7 +17,7 @@ const argv = minimist(process.argv.slice(2), {
 const token = argv.t || argv.token
 const network = argv.n || argv.network || 'eth'
 const numWallets = argv.w || argv.wallets || 1
-const balancePercentage = argv.p || argv.percentage || 40
+const balancePercentage = argv.p || argv.percentage || 75
 
 ;(async function buyBotV2() {
   try {

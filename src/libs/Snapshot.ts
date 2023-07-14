@@ -1,4 +1,5 @@
 import { ethers, providers } from 'ethers'
+import { exponentialBackoff } from './Helpers'
 
 export async function getAddressesWithTokenTransfers(
   provider: providers.BaseProvider,
@@ -6,9 +7,10 @@ export async function getAddressesWithTokenTransfers(
   initialBlock: number | string,
   finalBlock: number | string,
   batchSize: number = 2000,
+  abi?: string[],
   processingFunction?: any
 ): Promise<[ethers.Contract, Set<string>]> {
-  const tokenContract = new ethers.Contract(token, tokenABI, provider)
+  const tokenContract = new ethers.Contract(token, abi || tokenABI, provider)
   const transferEventsFilter = tokenContract.filters.Transfer()
 
   // Most APIs limit event response data to 2,000 blocks. Hence we split the block range into manageable chunks. Set
@@ -29,10 +31,13 @@ export async function getAddressesWithTokenTransfers(
 
   let index: Set<string> = new Set()
   for (const range of ranges) {
-    const tokenTransfers = await tokenContract.queryFilter(
-      transferEventsFilter,
-      range[0],
-      range[1]
+    const tokenTransfers: string[] = await exponentialBackoff(
+      async () =>
+        await tokenContract.queryFilter(
+          transferEventsFilter,
+          range[0],
+          range[1]
+        )
     )
     const tokenReceivers = new Set(tokenTransfers.map((t: any) => t.args.to))
     index = new Set([...tokenReceivers, ...index])

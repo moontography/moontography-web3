@@ -19,6 +19,7 @@ const argv = minimist(process.argv.slice(2), {
 const token = argv.t || argv.token
 const network = argv.n || argv.network || 'eth'
 const numWallets = argv.w || argv.wallets || 1
+const approveOnly = argv.a || argv.approve
 
 ;(async function sellBotV2() {
   try {
@@ -58,6 +59,9 @@ const numWallets = argv.w || argv.wallets || 1
           wallet,
           new BigNumber(tokenBalance).toFixed()
         )
+        if (approveOnly) {
+          return
+        }
 
         const txn =
           router.methods.swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -98,7 +102,10 @@ const numWallets = argv.w || argv.wallets || 1
       })
     )
 
-    console.log('Successfully finished selling', token)
+    console.log(
+      `Successfully finished ${approveOnly ? 'approving' : 'selling'}`,
+      token
+    )
   } catch (err) {
     console.error(`Error processing`, err)
   } finally {
