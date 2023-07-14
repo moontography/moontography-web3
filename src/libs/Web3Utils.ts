@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { BigNumber } from 'bignumber.js'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import Web3 from 'web3'
@@ -7,6 +8,8 @@ import { BlockTransactionObject } from 'web3-eth'
 import { Unit } from 'web3-utils'
 import { IAddress } from './Address'
 import { exponentialBackoff } from './Helpers'
+import ERC20 from './web3/ERC20'
+import IUniswapV3Factory from './web3/IUniswapV3Factory'
 
 dayjs.extend(utc)
 
@@ -205,6 +208,34 @@ export default function Web3Utils(
   }
 }
 
+export async function genericErc20Approval(
+  web3: Web3,
+  userAddy: string,
+  spendAmount: number | string,
+  tokenAddress: string,
+  delegateAddress: string
+) {
+  if (new BigNumber(spendAmount || 0).lte(0)) return
+
+  const contract = ERC20(web3, tokenAddress)
+  const currentAllowance = await contract.methods
+    .allowance(userAddy, delegateAddress)
+    .call()
+  if (new BigNumber(currentAllowance).lte(spendAmount || 0)) {
+    const txn = contract.methods.approve(
+      delegateAddress,
+      new BigNumber(2).pow(256).minus(1).toFixed()
+    )
+    const gasLimit = await txn.estimateGas({
+      from: userAddy,
+    })
+    await txn.send({
+      from: userAddy,
+      gasLimit: new BigNumber(gasLimit).times('1.6').toFixed(0),
+    })
+  }
+}
+
 export function addAllAccountsToWeb3(web3: Web3, pKeys: string[]): Account[] {
   let accounts: Account[] = []
   for (let _i = 0; _i < pKeys.length; _i++) {
@@ -217,6 +248,78 @@ export function addAccountToWeb3(web3: Web3, pKey: string): Account {
   const account = web3.eth.accounts.privateKeyToAccount(`0x${pKey}`)
   web3.eth.accounts.wallet.add(account)
   return account
+}
+
+export function randomizeObjectKeys(obj: any, regexp: RegExp) {
+  return Object.keys(obj)
+    .filter((k) => regexp.test(k))
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value)
+}
+
+export async function getIdealV3TokenPoolFee(
+  web3: Web3,
+  factoryAddress: string,
+  t0: string,
+  t1: string
+): Promise<number> {
+  const fees: number[] = [100, 500, 3000, 10000]
+  const factory = IUniswapV3Factory(web3, factoryAddress)
+  const t0Cont = ERC20(web3, t0)
+  const pools = await Promise.all([
+    factory.methods.getPool(t0, t1, fees[0]).call(),
+    factory.methods.getPool(t0, t1, fees[1]).call(),
+    factory.methods.getPool(t0, t1, fees[2]).call(),
+    factory.methods.getPool(t0, t1, fees[3]).call(),
+  ])
+  const filteredPools = pools
+    .map((pool, idx) => ({ pool, idx }))
+    .filter((p) => new BigNumber(p.pool.toLowerCase()).gt(0))
+  if (filteredPools.length == 1) {
+    return fees[filteredPools[0].idx]
+  }
+
+  const t0Balances = await Promise.all(
+    filteredPools.map(async (info) => {
+      return {
+        ...info,
+        balance: await t0Cont.methods.balanceOf(info.pool).call(),
+      }
+    })
+  )
+  const [desiredPool] = t0Balances.sort((i1, i2) =>
+    new BigNumber(i2.balance).minus(i1.balance).toNumber()
+  )
+  return fees[desiredPool.idx]
+}
+
+export const uniswapV2Info: any = {
+  bsc: {
+    router: '0x10ED43C718714eb63d5aA57B78B54704E256024E',
+    wrappedNative: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
+    utils: Web3Utils(null, `https://bsc-dataseed.binance.org/`),
+  },
+  eth: {
+    router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+    wrappedNative: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    utils: Web3Utils(null, `https://rpc.mevblocker.io/norefunds`),
+  },
+}
+
+export const uniswapV3Info: any = {
+  // bsc: {
+  //   factory: '',
+  //   router: '',
+  //   wrappedNative: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
+  //   utils: Web3Utils(null, `https://bsc-dataseed.binance.org/`),
+  // },
+  eth: {
+    factory: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
+    router: '0xe592427a0aece92de3edee1f18e0157c05861564',
+    wrappedNative: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    utils: Web3Utils(null, `https://rpc.mevblocker.io/norefunds`),
+  },
 }
 
 export interface IBlockRange {

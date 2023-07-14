@@ -6,10 +6,12 @@ import dayjs from 'dayjs'
 import minimist from 'minimist'
 import {
   addAllAccountsToWeb3,
+  genericErc20Approval,
   randomizeObjectKeys,
   uniswapV2Info,
 } from '../libs/Web3Utils'
 import UniswapV2Router02 from '../libs/web3/UniswapV2Router02'
+import ERC20 from '../libs/web3/ERC20'
 
 const argv = minimist(process.argv.slice(2), {
   string: ['a', 'address', 'n', 'network', 't', 'token'],
@@ -17,11 +19,10 @@ const argv = minimist(process.argv.slice(2), {
 const token = argv.t || argv.token
 const network = argv.n || argv.network || 'eth'
 const numWallets = argv.w || argv.wallets || 1
-const balancePercentage = argv.p || argv.percentage || 40
 
-;(async function buyBotV2() {
+;(async function sellBotV2() {
   try {
-    assert(token, `Need token contract to try to buy`)
+    assert(token, `Need token contract to try to sell`)
 
     const pkeyVarRegExp = /BUY_WALLET_PKEY_(\d+)/
     const allPkeys = randomizeObjectKeys(process.env, pkeyVarRegExp)
@@ -34,61 +35,70 @@ const balancePercentage = argv.p || argv.percentage || 40
       .filter((key: string) => !!key)
     const accounts = addAllAccountsToWeb3(web3, pkeys)
 
-    async function buyAttemptAndRetryForever(pkeyIdx: number) {
+    async function sellAttemptAndRetryForever(pkeyIdx: number) {
       try {
         const wallet = accounts[pkeyIdx].address
-        const balance = await web3.eth.getBalance(wallet)
-        const exactValueToBuy = new BigNumber(balance)
-          .times(balancePercentage)
-          .div(100)
-        const valueToBuy = exactValueToBuy
-          .minus(
-            new BigNumber(exactValueToBuy).times('0.03').times(Math.random())
-          )
-          .toFixed(0)
+        const tokenBalance = await ERC20(web3, token)
+          .methods.balanceOf(wallet)
+          .call()
+        if (new BigNumber(tokenBalance).lte(0)) {
+          return console.log(`not selling since no balance`, pkeyIdx, wallet)
+        }
+
+        await genericErc20Approval(
+          web3,
+          wallet,
+          tokenBalance,
+          token,
+          uniswapV2Info[network].router
+        )
+        console.log(
+          'APPROVED',
+          pkeyIdx,
+          wallet,
+          new BigNumber(tokenBalance).toFixed()
+        )
+
         const txn =
-          router.methods.swapExactETHForTokensSupportingFeeOnTransferTokens(
+          router.methods.swapExactTokensForETHSupportingFeeOnTransferTokens(
+            tokenBalance,
             0, // NOTE: should use private RPC to prevent frontrunning
-            [uniswapV2Info[network].wrappedNative, token],
+            [token, uniswapV2Info[network].wrappedNative],
             wallet,
             dayjs().add(5, 'minutes').unix()
           )
         console.log(
-          'BUYING NOW',
+          'SELLING NOW',
           pkeyIdx,
           wallet,
-          new BigNumber(balance).div(new BigNumber(10).pow(18)).toFixed(),
-          new BigNumber(valueToBuy).div(new BigNumber(10).pow(18)).toFixed()
+          new BigNumber(tokenBalance).toFixed()
         )
         const gasLimit = await txn.estimateGas({
           from: wallet,
-          value: valueToBuy,
         })
         await txn.send({
           from: wallet,
-          value: valueToBuy,
           gasLimit: new BigNumber(gasLimit).times('1.6').toFixed(0),
         })
         console.log(
           'SUCCESS',
           pkeyIdx,
           wallet,
-          new BigNumber(balance).div(new BigNumber(10).pow(18)).toFixed(),
-          new BigNumber(valueToBuy).div(new BigNumber(10).pow(18)).toFixed()
+          new BigNumber(tokenBalance).toFixed()
         )
       } catch (err) {
-        console.error(`Issue buying, trying again`, err)
-        await buyAttemptAndRetryForever(pkeyIdx)
+        console.error(`Issue selling, trying again`, err)
+        await sellAttemptAndRetryForever(pkeyIdx)
       }
     }
 
     await Promise.all(
       pkeys.map(async (_, idx) => {
-        await buyAttemptAndRetryForever(idx)
+        await sellAttemptAndRetryForever(idx)
       })
     )
 
-    console.log('Succuessfully finished buying')
+    console.log('Successfully finished selling', token)
   } catch (err) {
     console.error(`Error processing`, err)
   } finally {
