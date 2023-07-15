@@ -30,10 +30,26 @@ const approveOnly = argv.a || argv.approve
 
     const web3 = uniswapV2Info[network].utils.web3
     const router = UniswapV2Router02(web3, uniswapV2Info[network].router)
-    const pkeys = new Array(numWallets)
-      .fill(0)
-      .map((_, idx) => process.env[allPkeys[idx]] || '')
+    const pkeysWithBalances = await Promise.all(
+      new Array(allPkeys.length).fill(0).map(async (_, idx) => {
+        const key = process.env[allPkeys[idx]]
+        if (!key) {
+          return ''
+        }
+        const account = web3.eth.accounts.privateKeyToAccount(`0x${key}`)
+        const wallet = account.address
+        const tokenBalance = await ERC20(web3, token)
+          .methods.balanceOf(wallet)
+          .call()
+        if (new BigNumber(tokenBalance).lte(0)) {
+          return ''
+        }
+        return key
+      })
+    )
+    const pkeys = pkeysWithBalances
       .filter((key: string) => !!key)
+      .slice(0, numWallets)
     const accounts = addAllAccountsToWeb3(web3, pkeys)
 
     async function sellAttemptAndRetryForever(pkeyIdx: number) {
