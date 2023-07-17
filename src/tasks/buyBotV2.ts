@@ -18,6 +18,7 @@ const token = argv.t || argv.token
 const network = argv.n || argv.network || 'eth'
 const numWallets = argv.w || argv.wallets || 1
 const balancePercentage = argv.p || argv.percentage || 75
+const balanceMinETH = argv.m || argv.min || 0.2
 
 ;(async function buyBotV2() {
   try {
@@ -38,6 +39,15 @@ const balancePercentage = argv.p || argv.percentage || 75
       try {
         const wallet = accounts[pkeyIdx].address
         const balance = await web3.eth.getBalance(wallet)
+        const balETH = new BigNumber(balance).div(new BigNumber(10).pow(18))
+        if (balETH.lte(balanceMinETH)) {
+          return console.log(
+            'NOT BUYING BALANCE MIN',
+            pkeyIdx,
+            wallet,
+            balETH.toFixed(6)
+          )
+        }
         const exactValueToBuy = new BigNumber(balance)
           .times(balancePercentage)
           .div(100)
@@ -67,7 +77,7 @@ const balancePercentage = argv.p || argv.percentage || 75
         await txn.send({
           from: wallet,
           value: valueToBuy,
-          gasLimit: new BigNumber(gasLimit).times('1.6').toFixed(0),
+          gasLimit: new BigNumber(gasLimit).times('1.3').toFixed(0),
         })
         console.log(
           'SUCCESS',

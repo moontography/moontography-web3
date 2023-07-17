@@ -4,14 +4,17 @@ import assert from 'assert'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
 import minimist from 'minimist'
+import { sleep } from '../libs/Helpers'
 import {
   addAllAccountsToWeb3,
   genericErc20Approval,
+  getIdealV3TokenPoolFee,
   randomizeObjectKeys,
-  uniswapV2Info,
+  uniswapV3Info,
 } from '../libs/Web3Utils'
-import UniswapV2Router02 from '../libs/web3/UniswapV2Router02'
 import ERC20 from '../libs/web3/ERC20'
+import SwapRouter from '../libs/web3/SwapRouter'
+import WETH from '../libs/web3/WETH'
 
 const argv = minimist(process.argv.slice(2), {
   string: ['a', 'address', 'n', 'network', 't', 'token'],
@@ -21,15 +24,15 @@ const network = argv.n || argv.network || 'eth'
 const numWallets = argv.w || argv.wallets || 1
 const approveOnly = argv.a || argv.approve
 
-;(async function sellBotV2() {
+;(async function sellBotV3() {
   try {
     assert(token, `Need token contract to try to sell`)
 
     const pkeyVarRegExp = /BUY_WALLET_PKEY_(\d+)/
     const allPkeys = randomizeObjectKeys(process.env, pkeyVarRegExp)
 
-    const web3 = uniswapV2Info[network].utils.web3
-    const router = UniswapV2Router02(web3, uniswapV2Info[network].router)
+    const web3 = uniswapV3Info[network].utils.web3
+    const router = SwapRouter(web3, uniswapV3Info[network].router)
     const pkeysWithBalances = await Promise.all(
       new Array(allPkeys.length).fill(0).map(async (_, idx) => {
         const key = process.env[allPkeys[idx]]
@@ -62,12 +65,18 @@ const approveOnly = argv.a || argv.approve
           return console.log(`not selling since no balance`, pkeyIdx, wallet)
         }
 
+        console.log(
+          'APPROVING',
+          pkeyIdx,
+          wallet,
+          new BigNumber(tokenBalance).toFixed()
+        )
         await genericErc20Approval(
           web3,
           wallet,
           tokenBalance,
           token,
-          uniswapV2Info[network].router
+          uniswapV3Info[network].router
         )
         console.log(
           'APPROVED',
@@ -79,14 +88,22 @@ const approveOnly = argv.a || argv.approve
           return
         }
 
-        const txn =
-          router.methods.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            tokenBalance,
-            0, // NOTE: should use private RPC to prevent frontrunning
-            [token, uniswapV2Info[network].wrappedNative],
-            wallet,
-            dayjs().add(5, 'minutes').unix()
-          )
+        const poolFee = await getIdealV3TokenPoolFee(
+          web3,
+          uniswapV3Info[network].factory,
+          uniswapV3Info[network].wrappedNative,
+          token
+        )
+        const txn = router.methods.exactInputSingle([
+          token,
+          uniswapV3Info[network].wrappedNative,
+          poolFee,
+          wallet,
+          `${dayjs().add(5, 'minutes').unix()}`,
+          tokenBalance,
+          '0', // NOTE: should use private RPC to prevent frontrunning
+          '0', // NOTE: should use private RPC to prevent frontrunning
+        ])
         console.log(
           'SELLING NOW',
           pkeyIdx,
@@ -99,6 +116,18 @@ const approveOnly = argv.a || argv.approve
         await txn.send({
           from: wallet,
           gasLimit: new BigNumber(gasLimit).times('1.3').toFixed(0),
+        })
+        // let node catch up to new WETH balance
+        await sleep(1000)
+        const weth = WETH(web3, uniswapV3Info[network].wrappedNative)
+        const wethBal = await weth.methods.balanceOf(wallet).call()
+        const unwrap = weth.methods.withdraw(wethBal)
+        const unwrapGasLimit = await unwrap.estimateGas({
+          from: wallet,
+        })
+        await unwrap.send({
+          from: wallet,
+          gasLimit: new BigNumber(unwrapGasLimit).times('1.3').toFixed(0),
         })
         console.log(
           'SUCCESS',

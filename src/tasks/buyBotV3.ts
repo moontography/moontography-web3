@@ -20,6 +20,7 @@ const token = argv.t || argv.token
 const network = 'eth'
 const numWallets = argv.w || argv.wallets || 1
 const balancePercentage = argv.p || argv.percentage || 75
+const balanceMinETH = argv.m || argv.min || 0.2
 
 const info: any = uniswapV3Info
 
@@ -42,6 +43,15 @@ const info: any = uniswapV3Info
       try {
         const wallet = accounts[pkeyIdx].address
         const balance = await web3.eth.getBalance(wallet)
+        const balETH = new BigNumber(balance).div(new BigNumber(10).pow(18))
+        if (balETH.lte(balanceMinETH)) {
+          return console.log(
+            'NOT BUYING BALANCE MIN',
+            pkeyIdx,
+            wallet,
+            balETH.toFixed(6)
+          )
+        }
         const exactValueToBuy = new BigNumber(balance)
           .times(balancePercentage)
           .div(100)
@@ -71,8 +81,7 @@ const info: any = uniswapV3Info
           pkeyIdx,
           wallet,
           new BigNumber(balance).div(new BigNumber(10).pow(18)).toFixed(),
-          new BigNumber(valueToBuy).div(new BigNumber(10).pow(18)).toFixed(),
-          token
+          new BigNumber(valueToBuy).div(new BigNumber(10).pow(18)).toFixed()
         )
         const gasLimit = await txn.estimateGas({
           from: wallet,
@@ -81,15 +90,14 @@ const info: any = uniswapV3Info
         await txn.send({
           from: wallet,
           value: valueToBuy,
-          gasLimit: new BigNumber(gasLimit).times('2').toFixed(0),
+          gasLimit: new BigNumber(gasLimit).times('1.3').toFixed(0),
         })
         console.log(
           'SUCCESS',
           pkeyIdx,
           wallet,
           new BigNumber(balance).div(new BigNumber(10).pow(18)).toFixed(),
-          new BigNumber(valueToBuy).div(new BigNumber(10).pow(18)).toFixed(),
-          token
+          new BigNumber(valueToBuy).div(new BigNumber(10).pow(18)).toFixed()
         )
       } catch (err) {
         console.error(`Issue buying, trying again`, err)
@@ -103,7 +111,7 @@ const info: any = uniswapV3Info
       })
     )
 
-    console.log('Succuessfully finished buying', token)
+    console.log('Succuessfully finished buying')
   } catch (err) {
     console.error(`Error processing`, err)
   } finally {
