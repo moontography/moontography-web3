@@ -19,8 +19,8 @@ const token = argv.t || argv.token
 // const network = argv.n || argv.network || 'eth'
 const network = 'eth'
 const numWallets = argv.w || argv.wallets || 1
-const balancePercentage = argv.p || argv.percentage || 75
-const balanceMinETH = argv.m || argv.min || 0.2
+const balancePercentage = argv.p || argv.percentage || 80
+const balanceMinETH = argv.m || argv.min || 0.1
 
 const info: any = uniswapV3Info
 

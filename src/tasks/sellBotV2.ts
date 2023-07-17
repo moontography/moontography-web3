@@ -4,6 +4,7 @@ import assert from 'assert'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
 import minimist from 'minimist'
+// import { sleep } from '../libs/Helpers'
 import {
   addAllAccountsToWeb3,
   genericErc20Approval,
@@ -108,6 +109,7 @@ const approveOnly = argv.a || argv.approve
         )
       } catch (err) {
         console.error(`Issue selling, trying again`, err)
+        // await sleep(1000)
         await sellAttemptAndRetryForever(pkeyIdx)
       }
     }
