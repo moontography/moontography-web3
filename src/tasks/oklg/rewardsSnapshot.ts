@@ -58,6 +58,7 @@ const rewardsContracts: any = {
     startBlockNumber,
     endBlockNumber,
     BLOCK_LIMIT_PER_CALL,
+    undefined,
     (info: string) => console.log(`token snapshot progress: ${info}`)
   )
 

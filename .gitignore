@@ -2,3 +2,8 @@
 .env
 node_modules
 dist
+# Task output files (may contain private keys or wallet data)
+addresses_*.json
+balances_*.csv
+nftOwnership_*.csv
+rewardsBalances.csv

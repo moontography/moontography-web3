@@ -1,14 +1,22 @@
-import { ENS } from '@ensdomains/ensjs'
+// To use this script
+// bash-cli$ PROVIDER_URL=MAINNET_RPC_URL node dist/tasks/resolveEns --name resolver.eth
+
+import assert from 'assert'
+import minimist from 'minimist'
 import { ethers } from 'ethers'
+
+const argv = minimist(process.argv.slice(2), { string: ['n', 'name'] })
+const name = argv.n || argv.name || 'resolver.eth'
 ;(async function resolveEns() {
-  const provider = new ethers.providers.JsonRpcProvider(
-    `https://mainnet.infura.io/v3/0a6f34747b834f738bbd72f5b534a789`
-  )
-  console.log('HERE1')
-  const ens = new ENS()
-  console.log('HERE2')
-  await ens.setProvider(provider)
-  console.log('HERE3')
-  console.log('ADDY', await ens.name('resolver.eth').getAddress())
-  console.log('HERE4')
+  try {
+    assert(process.env.PROVIDER_URL, 'provider URL not provided')
+    const provider = new ethers.providers.JsonRpcProvider(
+      process.env.PROVIDER_URL
+    )
+    console.log('ADDY', await provider.resolveName(name))
+    process.exit(0)
+  } catch (err) {
+    console.error('Error resolving ENS name', err)
+    process.exit(1)
+  }
 })()
